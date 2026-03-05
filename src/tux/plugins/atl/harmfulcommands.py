@@ -36,7 +36,23 @@ DANGEROUS_RM_COMMANDS = (
 
 FORK_BOMB_PATTERNS = [r".*(.*)\(\)\s*{\s*\1\s*(\|\s*\1\s*)?&\s*}\s*;\s*\1.*"]
 
-DANGEROUS_DD_COMMANDS = r"dd\s+.*of=/dev/([hs]d[a-z]|nvme\d+n\d+)"
+DANGEROUS_DD_COMMANDS = (
+    # sudo/doas can be optional for privileges 
+    r"(?:sudo\s+|doas\s+|run0\s+)?"
+    r"\bdd\b\s+"
+    # any arguments before output
+    r"(?:[^;&|]+\s+)*"
+    # dangerous output targets 
+    r"of=("
+        r"/dev/(?:[hs]d[a-z]\d*|nvme\d+n\d+p?\d*)"   # writing to disks
+        r"|"
+        r"/dev/(?:mem|kmem|port)"                      # memory devices
+        r"|"
+        r"/etc/(?:passwd|shadow|group|sudoers)"        # writing to important systen files
+        r"|"
+        r"/boot/(?:vmlinuz|grub|efi)"                  # bootloader related
+    r")"
+)
 
 FORMAT_COMMANDS = r"mkfs\..*\s+/dev/([hs]d[a-z]|nvme\d+n\d+)"
 
